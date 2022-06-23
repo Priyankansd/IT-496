@@ -1,0 +1,54 @@
+# -*- coding: utf-8 -*-
+"""
+Spyder Editor
+
+This is a temporary script file.
+"""
+
+import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+import pandas as pd
+
+url="https://www.cvedetails.com/top-50-vendor-cvssscore-distribution.php"
+page=requests.get(url)
+print(page.status_code)
+
+
+driver=webdriver.Chrome(executable_path= "C:/Users/psiddap/Downloads/chromedriver.exe")
+driver.get(url)
+
+import time
+time.sleep(5)
+
+html=driver.page_source
+soup=BeautifulSoup(html,"html.parser")
+
+
+print('Classes of each table:')
+for table in soup.find_all('table'):
+    print(table.get('class'))
+    
+table=soup.find('table', class_='grid')
+
+DF=pd.DataFrame(columns=['id','vendor', 'total', '0-1', '1-2', '2-3', '3-4', '4-5',
+                         '5-6', '6-7', '7-8','8-9','9+','weighted avg', 
+                         '0-1%', '1-2%', '2-3%', '3-4%', '4-5%', 
+                         '5-6%', '6-7%', '7-8%','8-9%', '9+%'])
+
+
+
+index=0
+for row in table.tbody.find_all('tr'):
+    data=[]
+    for columns in row.find_all('td'):
+        if(columns!=[]):
+            data.append(columns.text.strip())
+            
+    if data!=[]:
+        DF.loc[index]=data
+        index+=1
+
+DF.to_csv('scrapedData.csv')
+driver.close()
